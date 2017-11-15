@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html><html lang="en">
 
   <head>
 
@@ -254,7 +253,7 @@
                       </div>
                     </div>
                       <div data-toggle="modal" data-target="#portfolio-3">
-                        <img class="img-portfolio img-fluid" src="img/portfolio-3.png">
+                        <img class="img-portfolio img-fluid" src="img/portfolio-3-1.png">
                       </div>
                   </div>
                 </div>
@@ -278,6 +277,23 @@
                 </div>
               </div>
 
+              <div class="col-md-6">
+                <div class="portfolio-item">
+                  <div class="browser-window">
+                    <div class="browser-navigation">
+                      <div class="browser-navigation-button"></div>
+                      <div class="browser-navigation-button"></div>
+                      <div class="browser-navigation-button"></div>
+                      <div class="browser-navigation-url">
+                          http://api.explorer.local
+                      </div>
+                    </div>
+                      <div data-toggle="modal" data-target="#portfolio-8">
+                        <img class="img-portfolio img-fluid" src="img/portfolio-8.png">
+                      </div>
+                  </div>
+                </div>
+              </div>
 
               <div class="col-md-6">
                 <div class="portfolio-item">
@@ -295,24 +311,21 @@
                       </a>
                   </div>
                 </div>
-              </div>
-
-              <div class="col-md-6">
                 <div class="portfolio-item">
-                  <div class="browser-window">
-                    <div class="browser-navigation">
-                      <div class="browser-navigation-button"></div>
-                      <div class="browser-navigation-button"></div>
-                      <div class="browser-navigation-button"></div>
-                      <div class="browser-navigation-url">
-                          http://blgse.gdsn.io
+                    <div class="browser-window">
+                      <div class="browser-navigation">
+                        <div class="browser-navigation-button"></div>
+                        <div class="browser-navigation-button"></div>
+                        <div class="browser-navigation-button"></div>
+                        <div class="browser-navigation-url">
+                            http://blgse.gdsn.io
+                        </div>
                       </div>
+                        <a href="http://blgse.gdsn.io">
+                          <img class="img-portfolio img-fluid" src="img/portfolio-7.png">
+                        </a>
                     </div>
-                      <a href="http://blgse.gdsn.io">
-                        <img class="img-portfolio img-fluid" src="img/portfolio-7.png">
-                      </a>
                   </div>
-                </div>
               </div>
 
             </div>
@@ -450,63 +463,92 @@
 
     <!-- Portfolio-3 Modal -->
     <div class="modal fade" id="portfolio-3" tabindex="-1" role="dialog" aria-labelledby="portfolio3ModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="portfolio3ModalLabel">Idiom IAM Query</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-            </div>
-            <div class="modal-body">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="portfolio3ModalLabel">Idiom IAM Query</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
 
-              <h3>Use Case</h3>
-                
-              As a data engineer, I should be able to choose an s3 action and resource, so that I can see which roles and associated policies I need for my ETL process.
-
-              <br><br>
+            <h3>Use Case</h3>
               
-              <img style="border:1px solid #eee" class="img-fluid" src="img/portfolio-3-1-a.png">  
-              
-              <br><br>
- 
-              <h3>Architecture</h3>
+            As a data engineer, I should be able to choose an s3 action and resource, so that I can see which roles and associated policies I need for my ETL process.
 
-              <img style="border:1px solid #eee" class="img-fluid" src="img/portfolio-3-1.png">
-  
-              <br><br>
+            <br><br>
+            
+            <img style="border:1px solid #eee" class="img-fluid" src="img/portfolio-3-4.png">  
+            
+            <br><br>
 
-              <h3>Challenges</h3>
- 
-              AWS IAM Roles, Policies, Groups, and Users can have complex relationships, specifically when each of those entities can have their own set of managed or attached overriding rules. To build these relationships, the RESTful API layer had to consume over a dozen of the IAM endpoints, and join the information together. Since the information was inherently document oriented, there was a linear path from endpoint to endpoint to build the model, and so using ESNext features like async and await keywords was essential to handle the promise based strategy used in the application.
+            <h3>Architecture</h3>
 
-              <br><br>            
-  
-              <img class="img-fluid" src="img/portfolio-3-2.png">
+            <img style="border:1px solid #eee" class="img-fluid" src="img/portfolio-3-1.png">
 
-              <br><br>
- 
-              <h3>Skills and Competencies</h3>
+            <br><br>
 
-              <ul>
-                  <li>Firm understanding of IAM API and AWS SDK</li>
-                  <li>Firm understanding of RESTful API design and consumption</li>
-                  <li>Use functional programming paradigm and ES6 for promise based asynchronous http requests/responses in NodeJS back-end, and VueJS front-end</li>
-                  <li>Use in-memory SQL DB</li>
-                  <li>Lead the path for development</li>
-                  <li>Save team time (which equals money)</li>
-              </ul>
+            <h3>Challenges</h3>
 
-              <div style="height:5px;width:100%;background: linear-gradient(to right, #bcbcbc 25%,#ffcd02 25%, #ffcd02 50%, #e84f47 50%, #e84f47 75%, #65c1ac 75%);"></div>
+            AWS IAM Roles, Policies, Groups, and Users can have complex relationships, specifically when each of those entities can have their own set of managed or attached overriding rules. To build these relationships, the RESTful API layer had to consume over a dozen of the IAM endpoints, and join the information together. Since the information was inherently document oriented, there was a linear path from endpoint to endpoint to build the model, and so using ESNext features like async and await keywords was essential to handle the promise based strategy used in the application.
 
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-              <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
-            </div>
+            <br><br>            
+
+            <img class="img-fluid" src="img/portfolio-3-2.png">
+
+            <br><br>
+
+            <h3>Skills and Competencies</h3>
+
+            <ul>
+                <li>Firm understanding of IAM API and AWS SDK</li>
+                <li>Firm understanding of RESTful API design and consumption</li>
+                <li>Use functional programming paradigm and ES6 for promise based asynchronous http requests/responses in NodeJS back-end, and VueJS front-end</li>
+                <li>Use in-memory SQL DB</li>
+                <li>Lead the path for development</li>
+                <li>Save team time (which equals money)</li>
+            </ul>
+
+            <div style="height:5px;width:100%;background: linear-gradient(to right, #bcbcbc 25%,#ffcd02 25%, #ffcd02 50%, #e84f47 50%, #e84f47 75%, #65c1ac 75%);"></div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Portfolio-6 Modal -->
+    <div class="modal fade" id="portfolio-8" tabindex="-1" role="dialog" aria-labelledby="portfolio8ModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="portfolio8ModalLabel">API Explorer</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+
+            <h3>Visualize Open Data APIs with Ease</h3>
+
+            Literally thousands of Open Data APIs exist to date, and to explore these APIs takes a lot of unrelated knowledge like understanding RESTful API Programming. Even just for simple curiousity, each API can vary from protocol, DTO, and attribute types. This API Explorer can digest any JSON or CSV API. There is a streaming RDJSON proxy in the case of APIs with no support for CORS. The tool can fetch and stream JSON and CSV information from any endpoint, and then attempt to analyze the response and recognize simple object attributes. For instance, exploring the paleobiology data api, objects returned can have a `img` attribute, and a pair of `lng` and `lat` attributes representing a map. The tool can recognize these attributes, and give a rich experience in response, like showing a google map, or an image.
+
+            <br><br>
+
+            <img class="img-fluid" src="img/portfolio-8.png">
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <!-- <button type="button" class="btn btn-primary">Save changes</button> -->
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Portfolio-5 Modal -->
     <div class="modal fade" id="portfolio-5" tabindex="-1" role="dialog" aria-labelledby="portfolio5ModalLabel" aria-hidden="true">
