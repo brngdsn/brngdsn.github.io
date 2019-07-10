@@ -1,12 +1,13 @@
 {
     "title": "Resume",
-    "name": "startbootstrap-resume",
-    "version": "5.0.7",
+    "name": "brngdsn.github.io",
+    "version": "2.0.0",
     "scripts": {
         "start": "node_modules/.bin/gulp watch"
     },
-    "description": "Resume is a simple, yet elegant resume and CV theme for Bootstrap 4.",
+    "description": "A simple, yet elegant resume and CV with Bootstrap 4 for Braun Goodson.",
     "keywords": [
+        "braun goodson",
         "css",
         "sass",
         "html",
@@ -14,19 +15,15 @@
         "theme",
         "template"
     ],
-    "homepage": "https://startbootstrap.com/template-overviews/resume",
-    "bugs": {
-        "url": "https://github.com/BlackrockDigital/startbootstrap-resume/issues",
-        "email": "feedback@startbootstrap.com"
-    },
+    "homepage": "https://brngdsn.github.io",
     "license": "MIT",
-    "author": "Start Bootstrap",
+    "author": "brn.gdsn@gmail.com",
     "contributors": [
         "David Miller (http://davidmiller.io/)"
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/BlackrockDigital/startbootstrap-resume.git"
+        "url": "https://github.com/brngdsn/brngdsn.github.io.git"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "5.9.0",
