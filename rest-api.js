@@ -80,7 +80,7 @@ function validatePassword(password) {
 }
 
 // Routes
-app.post('/bg-consulting/register', registerLimiter, async (req, res) => {
+app.post('/register', registerLimiter, async (req, res) => {
   const { username, password, email } = req.body;
   
   if (!validatePassword(password)) {
@@ -96,7 +96,7 @@ app.post('/bg-consulting/register', registerLimiter, async (req, res) => {
   }
 });
 
-app.post('/bg-consulting/login', loginLimiter, (req, res, next) => {
+app.post('/login', loginLimiter, (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
         return next(err);
@@ -113,7 +113,7 @@ app.post('/bg-consulting/login', loginLimiter, (req, res, next) => {
     })(req, res, next);
 });  
 
-app.get('/bg-consulting/logout', (req, res) => {
+app.get('/logout', (req, res) => {
   req.logout(() => {
     res.redirect('/');
   });
