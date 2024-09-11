@@ -8,7 +8,10 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-const PORT = process.env.PORT || 3330;
+const PORT = process.env.PORT || 3333;
+
+// Trust the proxy to correctly identify client IPs
+app.set('trust proxy', 1);
 
 // Define the rate limit configuration
 const loginLimiter = rateLimit({
@@ -108,7 +111,7 @@ app.post('/login', loginLimiter, (req, res, next) => {
         if (err) {
           return next(err);
         }
-        return res.status(200).json({ success: true, message: 'Login successful', redirectUrl: '/dashboard.html' });
+        return res.status(200).json({ success: true, message: 'Login successful', redirectUrl: '/profile.html' });
       });
     })(req, res, next);
 });  

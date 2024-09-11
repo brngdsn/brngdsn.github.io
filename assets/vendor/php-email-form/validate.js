@@ -11,7 +11,7 @@
       let thisForm = this;
 
       let action = thisForm.getAttribute('action');
-      let redirectUrl = formName === 'login-form' ? 'dashboard.html' : 'login.html'; // Set the redirect URL
+      let redirectUrl = formName === 'login-form' ? 'profile.html' : 'login.html'; // Set the redirect URL
       let recaptcha = thisForm.getAttribute('data-recaptcha-site-key');
 
       thisForm.querySelector('.loading').classList.add('d-block');
