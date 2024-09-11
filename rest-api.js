@@ -111,7 +111,7 @@ app.post('/login', loginLimiter, (req, res, next) => {
         if (err) {
           return next(err);
         }
-        return res.status(200).json({ success: true, message: 'Login successful', redirectUrl: '/profile.html' });
+        return res.status(200).json({ success: true, message: 'Login successful', redirectUrl: '/profile' });
       });
     })(req, res, next);
 });  
