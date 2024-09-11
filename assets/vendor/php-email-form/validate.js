@@ -1,84 +1,85 @@
-/**
-* PHP Email Form Validation - v3.9
-* URL: https://bootstrapmade.com/php-email-form/
-* Author: BootstrapMade.com
-*/
 (function () {
   "use strict";
 
   let forms = document.querySelectorAll('.php-email-form');
 
-  forms.forEach( function(e) {
+  forms.forEach(function(e) {
+    const formName = e.getAttribute('data-name'); // Get the form name (login or register)
     e.addEventListener('submit', function(event) {
       event.preventDefault();
 
       let thisForm = this;
 
       let action = thisForm.getAttribute('action');
+      let redirectUrl = formName === 'login-form' ? 'dashboard.html' : 'login.html'; // Set the redirect URL
       let recaptcha = thisForm.getAttribute('data-recaptcha-site-key');
-      
-      if( ! action ) {
-        displayError(thisForm, 'The form action property is not set!');
-        return;
-      }
+
       thisForm.querySelector('.loading').classList.add('d-block');
       thisForm.querySelector('.error-message').classList.remove('d-block');
       thisForm.querySelector('.sent-message').classList.remove('d-block');
 
-      let formData = new FormData( thisForm );
+      let formData = new FormData(thisForm);
 
-      if ( recaptcha ) {
-        if(typeof grecaptcha !== "undefined" ) {
+      // Handle reCAPTCHA (if present)
+      if (recaptcha) {
+        if (typeof grecaptcha !== "undefined") {
           grecaptcha.ready(function() {
             try {
-              grecaptcha.execute(recaptcha, {action: 'php_email_form_submit'})
-              .then(token => {
+              grecaptcha.execute(recaptcha, { action: 'form_submit' }).then(token => {
                 formData.set('recaptcha-response', token);
-                php_email_form_submit(thisForm, action, formData);
-              })
-            } catch(error) {
+                submitForm(thisForm, action, formData, redirectUrl);
+              });
+            } catch (error) {
               displayError(thisForm, error);
             }
           });
         } else {
-          displayError(thisForm, 'The reCaptcha javascript API url is not loaded!')
+          displayError(thisForm, 'The reCAPTCHA javascript API url is not loaded!');
         }
       } else {
-        php_email_form_submit(thisForm, action, formData);
+        submitForm(thisForm, action, formData, redirectUrl);
       }
     });
   });
 
-  function php_email_form_submit(thisForm, action, formData) {
+  function submitForm(thisForm, action, formData, redirectUrl) {
+    let jsonObject = {};
+    formData.forEach((value, key) => {
+      jsonObject[key] = value;
+    });
     fetch(action, {
       method: 'POST',
-      body: formData,
-      headers: {'X-Requested-With': 'XMLHttpRequest'}
+      body: JSON.stringify(jsonObject),
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json', // Ensure content type is JSON
+        'Accept': 'application/json'
+      },
+      mode: 'cors' // Enable CORS for cross-origin requests
     })
     .then(response => {
-      if( response.ok ) {
-        return response.text();
+      if (response.ok) {
+        return response.json(); // Expect a JSON response
       } else {
-        throw new Error(`${response.status} ${response.statusText} ${response.url}`); 
+        throw new Error(`${response.status} ${response.statusText} ${response.url}`);
       }
     })
     .then(data => {
       thisForm.querySelector('.loading').classList.remove('d-block');
-      if (data.trim() == 'OK') {
-        thisForm.querySelector('.sent-message').classList.add('d-block');
-        thisForm.reset(); 
+      if (data.success) {
+        window.location.href = redirectUrl; // Redirect on success
       } else {
-        throw new Error(data ? data : 'Form submission failed and no error message returned from: ' + action); 
+        throw new Error(data.message || 'Form submission failed.');
       }
     })
-    .catch((error) => {
+    .catch(error => {
       displayError(thisForm, error);
     });
   }
 
   function displayError(thisForm, error) {
     thisForm.querySelector('.loading').classList.remove('d-block');
-    thisForm.querySelector('.error-message').innerHTML = error;
+    thisForm.querySelector('.error-message').innerHTML = error.message || error;
     thisForm.querySelector('.error-message').classList.add('d-block');
   }
 
