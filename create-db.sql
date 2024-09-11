@@ -26,3 +26,6 @@ CREATE TABLE users (
   confirmed integer default 0,
   confirmkey varchar(128) default null
 );
+
+grant all privileges on all tables in schema public to bg_consulting_db_user;
+grant usage, select on all sequences in schema public to bg_consulting_db_user;
