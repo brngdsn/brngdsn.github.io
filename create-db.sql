@@ -13,7 +13,7 @@ create database bg_consulting_db;
 drop table if exists users;
 drop table if exists system_logs;
 
-create user bg_consulting_db_user with encrypted password '@StrawberrySuperman1';
+create user bg_consulting_db_user with encrypted password :'db_user_password';
 grant all privileges on database bg_consulting_db to bg_consulting_db_user;
 grant all privileges on all tables in schema public to bg_consulting_db_user;
 grant usage, select on all sequences in schema public to bg_consulting_db_user;
