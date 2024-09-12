@@ -6,6 +6,8 @@ const bcrypt = require('bcryptjs');
 const pool = require('./db');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const os = require('os');
+const cron = require('node-cron');
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -82,6 +84,31 @@ function validatePassword(password) {
   return regex.test(password);
 }
 
+// Function to log system info into PostgreSQL
+async function logSystemInfo() {
+  const uptime = os.uptime();
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const cpuUsage = process.cpuUsage();
+  const loadAvg = os.loadavg();
+  const platform = os.platform();
+  const arch = os.arch();
+  const hostname = os.hostname();
+
+  const query = `
+    INSERT INTO system_logs (uptime, total_memory, free_memory, cpu_usage, load_avg, platform, arch, hostname)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+  `;
+  const values = [uptime, totalMemory, freeMemory, cpuUsage, loadAvg, platform, arch, hostname];
+
+  try {
+    await pool.query(query, values);
+    console.log('System info logged to PostgreSQL', values);
+  } catch (err) {
+    console.error('Error inserting system info:', err);
+  }
+}
+
 // Routes
 app.post('/register', registerLimiter, async (req, res) => {
   const { username, password, email } = req.body;
@@ -122,7 +149,31 @@ app.get('/logout', (req, res) => {
   });
 });
 
+app.get('/system-info', async (req, res) => {
+  const pastDate = req.query.pastDate ? new Date(req.query.pastDate) : null;
+  const query = pastDate
+    ? `SELECT * FROM system_logs WHERE timestamp >= NOW() - INTERVAL '24 hours' AND timestamp <= $1 ORDER BY timestamp ASC`
+    : `SELECT * FROM system_logs WHERE timestamp >= NOW() - INTERVAL '24 hours' ORDER BY timestamp ASC`;
+
+  const values = pastDate ? [pastDate] : [];
+  
+  try {
+    const { rows } = await pool.query(query, values);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error fetching system info:', err);
+    res.status(500).json({ error: 'Error fetching system info' });
+  }
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+logSystemInfo();
+
+// Schedule the log function to run every 30 seconds
+cron.schedule('*/30 * * * * *', () => {
+  logSystemInfo();
 });

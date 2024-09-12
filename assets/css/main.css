@@ -1060,14 +1060,14 @@ section,
 --------------------------------------------------------------*/
 .services .service-item {
   background-color: var(--surface-color);
-  text-align: center;
+  /* text-align: center; */
   padding: 80px 20px;
   transition: all ease-in-out 0.3s;
   height: 100%;
 }
 
 .services .service-item .icon {
-  margin: 0 auto;
+  /* margin: 0 auto; */
   width: 64px;
   height: 64px;
   background: var(--accent-color);
@@ -1477,4 +1477,13 @@ section,
 
 .contact .php-email-form button[type=submit]:hover {
   background: color-mix(in srgb, var(--accent-color), transparent 20%);
+}
+
+div.xx-large > h3 {
+  font-size:50px;
+}
+
+div.xx-large > p,
+div.xx-large span {
+  font-size:25px;
 }

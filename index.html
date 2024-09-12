@@ -27,6 +27,49 @@
   <!-- Main CSS File -->
   <link href="assets/css/main.css" rel="stylesheet">
 
+  <style>
+    .system-info {
+        background-color: #111;
+        color: #18d26e;
+        font-family: 'Courier New', Courier, monospace;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .colorful-tile {
+        background-color: #222;
+        border: 2px solid #18d26e;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .colorful-tile h2 {
+        margin-bottom: 0.5rem;
+        color: #18d26e;
+    }
+    .colorful-tile p {
+        margin: 0.2rem 0;
+    }
+    canvas {
+        width: 100%;
+        height: 300px;
+        border: 2px solid #18d26e;
+        background-color: #111;
+        margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+        canvas {
+            height: 200px;
+        }
+    }
+  </style>
+
   <!-- =======================================================
   * Template Name: Personal
   * Template URL: https://bootstrapmade.com/personal-free-resume-bootstrap-template/
@@ -53,6 +96,7 @@
           <li><a href="about.html">About</a></li>
           <li><a href="resume.html">Resume</a></li>
           <li><a href="portfolio.html">Portfolio</a></li>
+          <li><a href="blog.html">Blog</a></li>
           <li class="dropdown"><a href="#"><span>Consulting</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
               <li><a href="login.html">Login</a></li>
@@ -121,6 +165,19 @@
       <div class="social-links d-flex justify-content-center">
         <a href=""><i class="bi bi-github"></i></a>
       </div>
+      <div class="system-info container" style="scale:.5;margin-top: -100px; margin-bottom: -85px;">
+        <!-- Colorful Tile for Latest Log -->
+        <div id="latest-log" class="colorful-tile">
+            <h2>Latest EC2 AWS Host Log</h2>
+            <p>Uptime: <span id="uptime" class="stat">0</span> seconds</p>
+            <p>Memory: <span id="memory" class="stat">0</span> MB free / <span id="total-memory" class="stat">0</span> MB total</p>
+            <p>CPU Usage: <span id="cpu-user" class="stat">0</span>% user / <span id="cpu-system" class="stat">0</span>% system</p>
+            <p>Platform: <span id="platform" class="stat">unknown</span></p>
+        </div>
+  
+        <!-- Simple Graph for System Info -->
+        <canvas id="systemInfoGraph"></canvas>
+      </div>
       <div class="container">
         <div class="copyright">
           <span>Copyright 2024</span> <strong class="px-1 sitename">brngdsn.github.io</strong> <span>All Rights Reserved</span>
@@ -156,6 +213,139 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+    const apiUrl = 'http://localhost:3333/system-info';
+
+    // Fetch system info data
+    async function fetchSystemInfo() {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        return data;
+    }
+
+    // Update the latest log tile
+    function updateLatestLog(latestLog) {
+        document.getElementById('uptime').textContent = latestLog.uptime;
+        document.getElementById('memory').textContent = (latestLog.free_memory / (1024 * 1024)).toFixed(2);
+        document.getElementById('total-memory').textContent = (latestLog.total_memory / (1024 * 1024)).toFixed(2);
+        document.getElementById('cpu-user').textContent = (latestLog.cpu_usage.user / 100).toFixed(2);
+        document.getElementById('cpu-system').textContent = (latestLog.cpu_usage.system / 100).toFixed(2);
+        document.getElementById('platform').textContent = latestLog.platform;
+    }
+
+    // Draw the graph on the canvas
+    function drawGraph(data) {
+        const canvas = document.getElementById('systemInfoGraph');
+        const ctx = canvas.getContext('2d');
+
+        // Clear the canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Set styles
+        ctx.strokeStyle = '#18d26e';
+        ctx.lineWidth = 2;
+        ctx.fillStyle = '#18d26e';
+
+        // Get graph dimensions
+        const width = canvas.width;
+        const height = canvas.height;
+        const padding = 10;
+        const graphWidth = width - 2 * padding;
+        const graphHeight = height - 2 * padding;
+
+        // Extract data (uptime and memory)
+        const labels = data.map(log => new Date(log.timestamp).toLocaleTimeString());
+        const uptimes = data.map(log => log.uptime);
+        const freeMemory = data.map(log => log.free_memory / (1024 * 1024)); // Convert bytes to MB
+        const cpuUserUsage = data.map(log => log.cpu_usage.user / 100); // Normalize CPU usage
+        const cpuSystemUsage = data.map(log => log.cpu_usage.system / 100);
+
+        // Get the maximum values for scaling
+        const maxUptime = Math.max(...uptimes);
+        const maxMemory = Math.max(...freeMemory);
+        const maxCpuUsage = Math.max(...cpuUserUsage, ...cpuSystemUsage);
+
+        // Function to scale values to fit the graph
+        function scaleValue(value, maxValue) {
+            return (value / maxValue) * graphHeight;
+        }
+
+        // Draw uptime line
+        ctx.beginPath();
+        for (let i = 0; i < uptimes.length; i++) {
+            const x = (i / (uptimes.length - 1)) * graphWidth + padding;
+            const y = height - padding - scaleValue(uptimes[i], maxUptime);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Draw memory usage line
+        ctx.beginPath();
+        ctx.strokeStyle = '#00f';
+        for (let i = 0; i < freeMemory.length; i++) {
+            const x = (i / (freeMemory.length - 1)) * graphWidth + padding;
+            const y = height - padding - scaleValue(freeMemory[i], maxMemory);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Draw CPU user usage line
+        ctx.beginPath();
+        ctx.strokeStyle = '#f00';
+        for (let i = 0; i < cpuUserUsage.length; i++) {
+            const x = (i / (cpuUserUsage.length - 1)) * graphWidth + padding;
+            const y = height - padding - scaleValue(cpuUserUsage[i], maxCpuUsage);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Draw CPU system usage line
+        ctx.beginPath();
+        ctx.strokeStyle = '#ff0';
+        for (let i = 0; i < cpuSystemUsage.length; i++) {
+            const x = (i / (cpuSystemUsage.length - 1)) * graphWidth + padding;
+            const y = height - padding - scaleValue(cpuSystemUsage[i], maxCpuUsage);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    // Fetch and render system info
+    async function renderSystemInfo() {
+        const data = await fetchSystemInfo();
+
+        // Update latest log tile
+        const latestLog = data[data.length - 1];
+        updateLatestLog(latestLog);
+
+        // Draw graph
+        drawGraph(data);
+    }
+
+    // Set canvas size and make it responsive
+    function resizeCanvas() {
+        const canvas = document.getElementById('systemInfoGraph');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+    }
+
+    // Resize canvas on window resize
+    window.addEventListener('resize', () => {
+        resizeCanvas();
+        renderSystemInfo(); // Redraw the graph after resizing
+    });
+
+    // Initial render
+    window.onload = () => {
+        resizeCanvas();
+        renderSystemInfo();
+    };
+  </script>
 
 </body>
 
