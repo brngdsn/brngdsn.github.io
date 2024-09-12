@@ -169,7 +169,7 @@
         <!-- Colorful Tile for Latest Log -->
         <div id="latest-log" class="colorful-tile">
             <h2>Latest EC2 AWS Host Log</h2>
-            <p>Uptime: <span id="uptime" class="stat">0</span> seconds</p>
+            <p>Uptime: <span id="uptime" class="stat">0</span> days</p>
             <p>Memory: <span id="memory" class="stat">0</span> MB free / <span id="total-memory" class="stat">0</span> MB total</p>
             <p>CPU Usage: <span id="cpu-user" class="stat">0</span>% user / <span id="cpu-system" class="stat">0</span>% system</p>
             <p>Platform: <span id="platform" class="stat">unknown</span></p>
@@ -226,7 +226,7 @@
 
     // Update the latest log tile
     function updateLatestLog(latestLog) {
-        document.getElementById('uptime').textContent = latestLog.uptime;
+        document.getElementById('uptime').textContent = latestLog.uptime/60/60/24;
         document.getElementById('memory').textContent = (latestLog.free_memory / (1024 * 1024)).toFixed(2);
         document.getElementById('total-memory').textContent = (latestLog.total_memory / (1024 * 1024)).toFixed(2);
         document.getElementById('cpu-user').textContent = (latestLog.cpu_usage.user / 100).toFixed(2);
