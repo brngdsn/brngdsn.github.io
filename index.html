@@ -226,7 +226,7 @@
 
     // Update the latest log tile
     function updateLatestLog(latestLog) {
-        document.getElementById('uptime').textContent = latestLog.uptime/60/60/24;
+        document.getElementById('uptime').textContent = (latestLog.uptime/60/60/24).toFixed(2);
         document.getElementById('memory').textContent = (latestLog.free_memory / (1024 * 1024)).toFixed(2);
         document.getElementById('total-memory').textContent = (latestLog.total_memory / (1024 * 1024)).toFixed(2);
         document.getElementById('cpu-user').textContent = (latestLog.cpu_usage.user / 100).toFixed(2);
