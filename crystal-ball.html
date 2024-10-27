@@ -46,9 +46,118 @@
             }
         }
     </style>
+    <style>
+        /* General styles */
+        /* .chat-widget {
+            padding: 10px;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: #ffffff;
+        } */
+    
+        /* Speed dial button */
+        speed-dial {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+        }
+    
+        button {
+        background-color: #ff0000;
+        color: #000;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        }
+    
+        button:hover {
+        background-color: #00cc00;
+        }
+    
+        /* Chat widget styles */
+        chat-widget {
+        display: none;
+        position: fixed;
+        bottom: 100px;
+        right: 20px;
+        width: 300px;
+        /* max-height: 500px; */
+        /* background: #1c1c1c; */
+        /* border-radius: 10px; */
+        /* box-shadow: 0 0 15px rgba(51, 51, 51, 0.5); */
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        }
+    
+        .chat-header {
+        background: #00FF00;
+        color: #000;
+        padding: 10px;
+        font-size: 18px;
+        text-align: center;
+        }
+    
+        .chat-body {
+        flex: 1;
+        padding: 10px;
+        overflow-y: auto;
+        }
+    
+        .chat-body p {
+            font-size: 12px;
+        margin: 0;
+        padding: 5px;
+        background: #333;
+        border-radius: 5px;
+        }
+    
+        .chat-body button {
+        display: block;
+        background: #00FF00;
+        color: #000;
+        margin: 5px 0;
+        border: none;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 12px;
+        cursor: pointer;
+        }
+    
+        .chat-body button:hover {
+        background: #00cc00;
+        }
+    
+        .chat-footer {
+        display: flex;
+        justify-content: center;
+        padding: 10px;
+        }
+    
+        .close-btn {
+        background: #ff0000;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        }
+    
+        .close-btn:hover {
+        background: #cc0000;
+        }
+    
+        </style>
 </head>
 <body>
-    <div class="container" style="scale:.5;">
+    <div class="system-info container" style="scale:.5;">
         <!-- Colorful Tile for Latest Log -->
         <div id="latest-log" class="colorful-tile">
             <h2>Latest Log</h2>
@@ -61,7 +170,6 @@
         <!-- Simple Graph for System Info -->
         <canvas id="systemInfoGraph"></canvas>
     </div>
-
     <script>
         const apiUrl = 'https://ec2-44-194-203-101.compute-1.amazonaws.com/bgconsulting/system-info';
 
@@ -193,6 +301,152 @@
             resizeCanvas();
             renderSystemInfo();
         };
+    </script>
+
+    <chat-widget></chat-widget>
+
+    <script>
+        let response_json = ``;
+class ChatWidget extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+    this.shadowRoot.innerHTML = `
+      <div class="chat-widget">
+        <div class="chat-body">
+        </div>
+      </div>
+      <speed-dial>
+        <button id="speed-dial-btn">Chat</button>
+      </speed-dial>
+    `;
+    this.chatWidget = this.shadowRoot.querySelector('.chat-widget');
+    this.chatBody = this.shadowRoot.querySelector('.chat-body');
+    // this.closeBtn = this.shadowRoot.querySelector('.close-btn');
+    this.speedDialBtn = this.shadowRoot.querySelector('#speed-dial-btn');
+    this.apiUrl = 'http://localhost:3333/chat';
+    this.isOpen = true;
+
+    // this.closeBtn.addEventListener('click', () => this.toggleChatWidget());
+    this.speedDialBtn.addEventListener('click', () => this.toggleChatWidget());
+
+    this.loadChat();
+  }
+
+    async loadChat(qid = -1) {
+        response_json = ``;
+    try {
+        const response = await fetch(`${this.apiUrl}?qid=${qid}`, { method: 'POST' });
+
+        if (!response.body) {
+        throw new Error('ReadableStream not supported in this browser.');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';  // Buffer to accumulate chunks
+
+        while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Attempt to parse JSON from the buffer, allowing incomplete chunks to accumulate
+        let lastNewlineIndex = buffer.lastIndexOf('\n');
+
+        if (lastNewlineIndex !== -1) {
+            // Split up to the last complete JSON object
+            const completeChunk = buffer.slice(0, lastNewlineIndex);
+            buffer = buffer.slice(lastNewlineIndex + 1);  // Retain the rest for the next iteration
+
+            // Process the complete chunk
+            const jsonObjects = completeChunk.split('\n').filter(Boolean);
+            jsonObjects.forEach(jsonString => this.handleStreamData(jsonString));
+        }
+        }
+
+        // Handle the remaining buffer after the stream ends
+        if (buffer.length > 0) {
+        this.handleStreamData(buffer);  // If any incomplete JSON is left
+        }
+
+    } catch (error) {
+        console.error('Error fetching chat:', error);
+    }
+    }
+
+    handleStreamData(data) {
+    try {
+        // Attempt to parse and handle the streamed JSON data
+        const parsedData = JSON.parse(data);
+        const { answer } = parsedData;
+        console.log('Parsed response:', parsedData);
+        response_json = `${response_json}${parsedData.response}`
+        const response = JSON.parse(response_json);
+        console.log(response)
+
+        // Display the chat or do further processing with the parsed response
+        this.displayChat(response);
+
+    } catch (error) {
+        console.error('Error parsing stream data:', error, data);
+    }
+    }
+
+  displayChat(data) {
+    if (data && data.answer && data.questions) {
+        console.log(`displaying chat`);
+        this.chatBody.innerHTML = '';
+        
+        // Display the answer
+        const answerParagraph = document.createElement('p');
+        answerParagraph.textContent = data.answer;
+        answerParagraph.style.background = '#333';
+        answerParagraph.style.borderRadius = '5px';
+        answerParagraph.style.padding = '10px';
+        this.chatBody.appendChild(answerParagraph);
+
+        // Display the questions as buttons
+        data.questions.forEach(question => {
+        const button = document.createElement('button');
+        button.style.marginBottom = '3px';
+        button.textContent = question.question_content;
+        button.addEventListener('click', () => this.loadChat(question.question_hash));
+        this.chatBody.appendChild(button);
+        });
+        
+
+        this.scrollToBottom();
+    }
+    }
+
+  async submitAnswer(questionId) {
+    try {
+      await fetch(`${this.apiUrl}?qid=${questionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answerId: questionId }),
+      });
+      this.loadChat();
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+    }
+  }
+
+  scrollToBottom() {
+    this.chatBody.scrollTop = this.chatBody.scrollHeight;
+  }
+
+  toggleChatWidget() {
+    this.isOpen = !this.isOpen;
+    this.chatWidget.style.display = this.isOpen ? 'block' : 'none';
+    document.querySelector(`chat-widget`).style.width = this.isOpen ? '300px' : 'inherit';
+  }
+}
+
+customElements.define('chat-widget', ChatWidget);
+
     </script>
 </body>
 </html>

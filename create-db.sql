@@ -12,6 +12,7 @@ create database bg_consulting_db;
 
 drop table if exists users;
 drop table if exists system_logs;
+drop table if exists traffic;
 
 create user bg_consulting_db_user with encrypted password :'db_user_password';
 grant all privileges on database bg_consulting_db to bg_consulting_db_user;
@@ -55,6 +56,26 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER delete_old_logs_trigger
 AFTER INSERT ON system_logs
 FOR EACH STATEMENT EXECUTE FUNCTION delete_old_logs();
+
+CREATE TABLE traffic (
+  id SERIAL PRIMARY KEY,
+  user_agent TEXT,
+  platform TEXT,
+  language TEXT,
+  screen_width INTEGER,
+  screen_height INTEGER,
+  window_width INTEGER,
+  window_height INTEGER,
+  timezone TEXT,
+  cookie_enabled BOOLEAN,
+  online_status BOOLEAN,
+  referrer TEXT,
+  current_url TEXT,
+  latitude NUMERIC,
+  longitude NUMERIC,
+  client_ip TEXT,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 grant all privileges on all tables in schema public to bg_consulting_db_user;
 grant usage, select on all sequences in schema public to bg_consulting_db_user;

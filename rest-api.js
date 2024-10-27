@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
@@ -8,6 +9,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const os = require('os');
 const cron = require('node-cron');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3333;
@@ -30,6 +32,14 @@ const registerLimiter = rateLimit({
     message: 'Too many login attempts from this IP, please try again after 15 minutes',
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 5 login requests per windowMs
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
 // Middleware
@@ -109,7 +119,175 @@ async function logSystemInfo() {
   }
 }
 
-// Routes
+function chat (data, response) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: 'localhost',  // Replace with the API hostname
+            port: 11434,
+            path: '/api/generate',             // Replace with the API endpoint
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': data.length
+            }
+          };
+          
+          const req = http.request(options, (res) => {
+            console.log(`Status Code: ${res.statusCode}`);          
+            res.pipe(response);
+            // Stream the response data to the console
+            let json = ``
+            res.on('data', (chunk) => {
+              const output = JSON.parse(chunk.toString());
+              json = `${json}${output.response}`;
+              process.stdout.write(output.response);
+            });
+          
+            // Log the end of the response
+            res.on('end', () => {
+              resolve(JSON.parse(json));
+              console.log('\nResponse ended.');
+            });
+          });
+          
+          // Handle request errors
+          req.on('error', (e) => {
+            console.error(`Problem with request: ${e.message}`);
+            reject({error:e.message})
+          });
+          
+          // Write JSON data to the request body
+          req.write(data);
+          
+          // End the request
+          req.end();
+    });
+}
+
+function get_data (question) {
+    return JSON.stringify({
+        prompt: `
+            ${question}
+            Provide 3 follow up questions I can ask you about what you will say.
+            Responses should be short and conversation should be small.
+            Respond in JSON.
+            Response schema: {
+                answer: string,
+                questions: [{
+                    question_content: string,
+                    question_hash: number
+                }, ...]
+            }
+        `,
+        model: 'bgsechatbot:latest',
+        format: 'json'
+    });
+}
+
+const questions_hash = {};
+
+function get_question (qid) {
+  if (qid === `-1`) {
+    return `Hi, there.`;
+  } else {
+    return questions_hash[qid];
+  }
+}
+
+app.post('/chat', chatLimiter, async (req, res) => {
+  const question_hash = req.query.qid ? req.query.qid : -1;
+  
+  try {
+    console.log({ question_hash })
+    const question = get_question(question_hash);
+    console.log({ question })
+    const data = get_data(question.question_content);
+    const new_chat = await chat(data, res);
+    const { questions } = new_chat;
+    questions.forEach((q) => {
+      questions_hash[q.question_hash] = q;
+    });
+  } catch (err) {
+    console.error('Error fetching chat:', err);
+    res.status(500).json({ error: 'Error fetching chat' });
+  }
+});
+
+// Helper function to get the client IP address
+const getClientIp = (req) => {
+  return req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
+};
+
+// POST /traffic - store traffic data
+app.post('/traffic', async (req, res) => {
+  const {
+    userAgent,
+    platform,
+    language,
+    screenWidth,
+    screenHeight,
+    windowWidth,
+    windowHeight,
+    timezone,
+    cookieEnabled,
+    onlineStatus,
+    referrer,
+    currentURL,
+    latitude,
+    longitude,
+  } = req.body;
+
+  // Server-side data enrichment (e.g., client IP)
+  const clientIp = getClientIp(req);
+
+  try {
+    // Insert data into PostgreSQL database
+    const queryText = `
+      INSERT INTO traffic (
+        user_agent, platform, language, screen_width, screen_height, window_width, window_height, 
+        timezone, cookie_enabled, online_status, referrer, current_url, latitude, longitude, client_ip
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *
+    `;
+    const values = [
+      userAgent,
+      platform,
+      language,
+      screenWidth,
+      screenHeight,
+      windowWidth,
+      windowHeight,
+      timezone,
+      cookieEnabled,
+      onlineStatus,
+      referrer,
+      currentURL,
+      latitude,
+      longitude,
+      clientIp,
+    ];
+
+    const result = await pool.query(queryText, values);
+
+    // Return the inserted row
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error inserting traffic data:', error);
+    res.status(500).json({ error: 'Failed to record traffic data.' });
+  }
+});
+
+// GET /traffic - retrieve most recent traffic data
+app.get('/traffic', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM traffic ORDER BY timestamp DESC LIMIT 100');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching traffic data:', error);
+    res.status(500).json({ error: 'Failed to fetch traffic data.' });
+  }
+});
+
+// Auth Routes
 app.post('/register', registerLimiter, async (req, res) => {
   const { username, password, email } = req.body;
   
@@ -171,9 +349,8 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-logSystemInfo();
-
 // Schedule the log function to run every 30 seconds
-cron.schedule('*/30 * * * * *', () => {
-  logSystemInfo();
-});
+// logSystemInfo();
+// cron.schedule('*/30 * * * * *', () => {
+//   logSystemInfo();
+// });
