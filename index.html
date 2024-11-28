@@ -56,17 +56,31 @@
     .colorful-tile p {
         margin: 0.2rem 0;
     }
-    canvas {
+    /* canvas {
         width: 100%;
         height: 300px;
         border: 2px solid #18d26e;
         background-color: #111;
         margin-top: 20px;
-    }
+    } */
+    .hero canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: right;
+    z-index: 1;
+}
     @media (max-width: 768px) {
         canvas {
             height: 200px;
         }
+    }
+    body {
+      text-shadow: #000 0px 0px 1px,   #000 0px 0px 1px,   #000 0px 0px 1px,
+             #000 0px 0px 1px,   #000 0px 0px 1px,   #000 0px 0px 1px;
     }
   </style>
 
@@ -140,14 +154,14 @@
     <!-- Hero Section -->
     <section id="hero" class="hero section dark-background">
 
-      <img src="assets/img/hero-bg.svg" alt="" data-aos="fade-in">
+      <!-- <img src="assets/img/hero-bg.svg" alt="" data-aos="fade-in"> -->
+
+      <canvas id="glCanvas" alt="" data-aos="fade-in"></canvas>
 
       <div class="container" data-aos="zoom-out" data-aos-delay="100">
         <h2>Braun Goodson</h2>
         <p>Software engineering consultant in 
-          <span class="typed" data-typed-items="Full-Stack Development (Web and Mobile), Cloud Solutions and Serverless Architectures, API Development and Integration, UI/UX Design, AI and LLMs and Greenfield Technologies">
-            Full-Stack Development (Web and Mobile)
-          </span>
+          <span class="typed" data-typed-items="Full-Stack Development (Web and Mobile), Cloud Solutions and Serverless Architectures, API Development and Integration, UI/UX Design, AI and LLMs and Greenfield Technologies"></span>
           <span class="typed-cursor typed-cursor--blink"></span></p>
         <div class="social-links">
           <a href="https://github.com/brngdsn"><i class="bi bi-github"></i></a>
@@ -173,7 +187,7 @@
           <a href="https://www.youtube.com/@braungoodson5713"><i class="bi bi-youtube"></i></a>
 
       </div>
-      <div class="system-info container" style="scale:.5;margin-top: -100px; margin-bottom: -85px;">
+      <div class="system-info container" style="scale:.5;margin-top: -100px; margin-bottom: -85px;display:none;">
         <!-- Colorful Tile for Latest Log -->
         <div id="latest-log" class="colorful-tile">
             <h2>Latest EC2 AWS Host Log</h2>
@@ -221,6 +235,179 @@
 
   <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
+
+  <!-- gl -->
+  <script type="text/javascript">
+    // Get the canvas element and set its size
+    const canvas = document.getElementById('glCanvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+    if (!gl) {
+        alert('WebGL not supported in this browser.');
+    }
+
+    // Resize the canvas to fit the window
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Vertex shader source code
+    const vertexShaderSource = `
+        attribute vec2 a_position;
+        varying vec2 v_uv;
+
+        void main() {
+            v_uv = a_position * 0.5 + 0.5;
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    `;
+
+    // Fragment shader source code (provided by the user)
+    const fragmentShaderSource = `
+        #extension GL_OES_standard_derivatives : enable
+
+        precision highp float;
+
+        uniform float time;
+        uniform vec2 mouse;
+        uniform vec2 resolution;
+
+        void main( void ) {
+
+            vec2 position = ( gl_FragCoord.xy / resolution.xy ) + mouse / 4.0;
+
+            float color = 0.0;
+            color += sin( position.x * cos( time / 15.0 ) * 80.0 ) + cos( position.y * cos( time / 15.0 ) * 10.0 );
+            color += sin( position.y * sin( time / 10.0 ) * 40.0 ) + cos( position.x * sin( time / 25.0 ) * 40.0 );
+            color += sin( position.x * sin( time / 5.0 ) * 10.0 ) + sin( position.y * sin( time / 35.0 ) * 80.0 );
+            color *= sin( time / 10.0 ) * 0.5;
+
+            gl_FragColor = vec4( vec3( color, color * 1.5, sin( color + time / 3.0 ) * 0.75 ), 1.0 );
+
+        }
+    `;
+
+    // Function to create and compile a shader
+    function createShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        const success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+        if (!success) {
+            console.error('Could not compile shader:', gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
+
+    // Function to create a program from vertex and fragment shaders
+    function createProgram(gl, vertexShader, fragmentShader) {
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        const success = gl.getProgramParameter(program, gl.LINK_STATUS);
+        if (!success) {
+            console.error('Program failed to link:', gl.getProgramInfoLog(program));
+            gl.deleteProgram(program);
+            return null;
+        }
+        return program;
+    }
+
+    // Create and compile shaders
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+    if (!vertexShader || !fragmentShader) {
+        throw new Error('Shader compilation failed.');
+    }
+
+    // Create the shader program
+    const program = createProgram(gl, vertexShader, fragmentShader);
+
+    if (!program) {
+        throw new Error('Shader program linking failed.');
+    }
+
+    // Look up attribute and uniform locations
+    const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+    const resolutionUniformLocation = gl.getUniformLocation(program, 'resolution');
+    const timeUniformLocation = gl.getUniformLocation(program, 'time');
+    const mouseUniformLocation = gl.getUniformLocation(program, 'mouse');
+
+    // Create a buffer and put a quad in it (two triangles)
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    const positions = [
+        -1, -1,
+         1, -1,
+        -1,  1,
+        -1,  1,
+         1, -1,
+         1,  1,
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    // Enable the attribute
+    gl.enableVertexAttribArray(positionAttributeLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.vertexAttribPointer(
+        positionAttributeLocation,
+        2,          // size (2 components per iteration)
+        gl.FLOAT,   // type
+        false,      // normalize
+        0,          // stride
+        0           // offset
+    );
+
+    // Use the shader program
+    gl.useProgram(program);
+
+    // Start time
+    let startTime = Date.now();
+
+    // Mouse position
+    const mousePos = { x: 0, y: 0 };
+
+    // Update mouse position on mouse move
+    window.addEventListener('mousemove', function(event) {
+        // Normalize mouse coordinates between 0 and 1
+        mousePos.x = event.clientX / canvas.width;
+        mousePos.y = 1.0 - event.clientY / canvas.height; // Flip Y for WebGL coordinates
+    });
+
+    // Render loop
+    function render() {
+        // Calculate elapsed time in seconds
+        let currentTime = (Date.now() - startTime) / 1000.0;
+
+        // Set the uniform values
+        gl.uniform2f(resolutionUniformLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
+        gl.uniform1f(timeUniformLocation, currentTime);
+        gl.uniform2f(mouseUniformLocation, mousePos.x, mousePos.y);
+
+        // Clear the canvas
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // Draw the quad
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        // Request the next frame
+        requestAnimationFrame(render);
+    }
+
+    // Start rendering
+    render();
+</script>
 
   <script>
     const apiUrl = 'https://ec2-44-194-203-101.compute-1.amazonaws.com/bgconsulting/system-info';
