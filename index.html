@@ -389,9 +389,12 @@
         // Calculate elapsed time in seconds
         let currentTime = (Date.now() - startTime) / 1000.0;
 
+        // Scale down the time to slow the animation (1/8th speed)
+        let scaledTime = currentTime / 8.0;
+
         // Set the uniform values
         gl.uniform2f(resolutionUniformLocation, gl.drawingBufferWidth, gl.drawingBufferHeight);
-        gl.uniform1f(timeUniformLocation, currentTime);
+        gl.uniform1f(timeUniformLocation, scaledTime);
         gl.uniform2f(mouseUniformLocation, mousePos.x, mousePos.y);
 
         // Clear the canvas
